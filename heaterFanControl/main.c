@@ -43,17 +43,37 @@
 #define		PWM_HEATER_PERCENT_OFF		0
 #define		PWM_FAN_PERCENT_OFF			0
 
-//#define		TIMER_VAL_HEATER			7200000UL	// 120 * 60 * 1000 (in Millisecond)
-//#define		TIMER_VAL_FAN				7200000UL	// 120 * 60 * 1000 (in Millisecond)
-//#define		TIMER_VAL_LED				1800000UL	// 30 * 60 * 1000  (in Millisecond)
+#define		TEMP_LOW_VAL				30.0F
+#define		TEMP_MID_VAL				50.0F
+#define		TEMP_HIGH_VAL				70.0F
+#define		TEMP_CRITICAL_VAL			80.0F
 
-// Dummy 
-#define		TIMER_VAL_HEATER			10000UL	
-#define		TIMER_VAL_FAN				10000UL	
-#define		TIMER_VAL_LED				10000UL
+/*#define		SENSOR_CHECK_TIME			120000UL			// 120 * 1000 (120 Seconds)*/
+
+
+// 120 * 60 * 1000 (in Millisecond) -> 120 Minutes
+//#define		TIMER_VAL_HEATER			7200000UL	
+
+// 120 * 60 * 1000 (in Millisecond) -> 120 Minutes
+//#define		TIMER_VAL_FAN				7200000UL	
+
+// 30 * 60 * 1000  (in Millisecond) -> 30 Minutes
+//#define		TIMER_VAL_LED				1800000UL	
+
+
+// Dummy Time value during test
+#define		SENSOR_CHECK_TIME			3000UL			
+
+#define		TIMER_VAL_HEATER			20000UL	
+#define		TIMER_VAL_FAN				20000UL	
+#define		TIMER_VAL_LED				20000UL
 	
 static uint16_t PWM_FREQ = 490;
 static uint16_t TOP_VAL = 0;
+
+volatile uint8_t count_sw_a = 0;
+volatile uint8_t count_sw_b = 0;
+volatile uint8_t count_sw_c = 0;
 
 volatile unsigned long milliseconds;
 
@@ -139,19 +159,20 @@ void pwm_fan(uint8_t p) {
 	return;
 }
 
-uint16_t get_temp() {
+float get_temp() {
+	float temperature = 0.0;
 	// Start conversion
 	ADCSRA |= (1 << ADSC);
 	
 	// Wait until the conversion completes 
 	while (ADCSRA & (1 << ADSC));
-	
-	return ADC;
-}
 
-volatile uint8_t count_sw_a = 0;
-volatile uint8_t count_sw_b = 0;
-volatile uint8_t count_sw_c = 0;
+	// Temperature calculation goes follows
+	// 1 Degree Centigrade = 2.049 steps 
+	temperature = ADC / 2.049;
+
+	return temperature;
+}
 
 uint8_t sw_a() {
 	if(IO_PORTD_IN & (1 << SW_A)) {
@@ -197,8 +218,6 @@ uint8_t get_sw_b() {
 	
 	return count_sw_b;
 }
-
-
 
 uint8_t sw_c() {
 	if(IO_PORTD_IN & (1 << SW_C)) {
@@ -253,27 +272,13 @@ void led_sig_off() {
 	return;
 }
 
-uint8_t flag_start_timer_heater_120min = 0;
-uint8_t flag_reset_timer_heater_120min = 0;
-uint8_t flag_heater_off = 0;
-
-uint8_t flag_start_timer_fan_120min = 0;
-uint8_t flag_reset_timer_fan_120min = 0;
-
-uint8_t flag_start_timer_led_30min = 0;
-uint8_t flag_reset_timer_led_30min = 0;
-
-uint8_t flag_start_read_temp_timer = 0;
-uint8_t flag_reset_read_temp_timer = 0;
-
 int main(void) {    
+	
 	pwm_init();
 	init_timerModule();
 	sei();
 	init_adc();
 	init_io();
-	
-	DDRC = 0xFF;
 	
 	uint8_t swa_val = 0;
 	uint8_t swa_prev_val = 0;
@@ -287,6 +292,9 @@ int main(void) {
 	unsigned long time_val_heater_start = 0;
 	unsigned long time_val_fan_start = 0;
 	unsigned long time_val_led_start = 0;
+	
+	float temp_avg  = 0.0;
+	double temp_sum = 0.0;
 
     while (1) {		
 		
@@ -317,25 +325,21 @@ int main(void) {
 				case 2:
 					pwm_heater(PWM_HEATER_PERCENT_40);
 					led_heater_on();
-					PORTC = 0x02;
 				break;
 				
 				case 3:
 					pwm_heater(PWM_HEATER_PERCENT_60);
 					led_heater_on();
-					PORTC = 0x03;
 				break;
 				
 				case 4:
 					pwm_heater(PWM_HEATER_PERCENT_OFF);
 					led_heater_off();
-					PORTC = 0x04;
 				break;
 				
 				default:
 					pwm_heater(PWM_HEATER_PERCENT_OFF);
 					led_heater_off();
-					PORTC = 0x00;
 				break;
 			}
 		}
@@ -348,7 +352,6 @@ int main(void) {
 
 		// ------- End Heater Control -------------
 		
-
 
 		//----------- LED Control -----------------
 		swb_val = get_sw_b();
@@ -367,7 +370,7 @@ int main(void) {
 			count_sw_a = 0; swa_prev_val = 0;
 			count_sw_c = 0; swc_prev_val = 0;
 			
-			// ---- Proceed to fan work
+			// ---- Proceed to LED work
 			time_val_led_start = millis();
 			swb_prev_val = swb_val;
 
@@ -429,13 +432,11 @@ int main(void) {
 				case 4:
 					pwm_fan(PWM_FAN_PERCENT_OFF);
 					led_fan_off();
-					PORTC = 0x04;
 				break;
 		
 				default:
 					pwm_fan(PWM_FAN_PERCENT_OFF);
 					led_fan_off();
-					PORTC = 0x00;
 				break;
 			}
 		}
@@ -445,8 +446,70 @@ int main(void) {
 			led_fan_off();
 			count_sw_c = 0; swc_prev_val = 0;
 		}
-	// ------- End fan control ---------------------------------
+		// ------- End fan control ---------------------------------
 	
+
+		// --------------- Temperature sensing and Control ----------
+		// ---- Check sensor each 120 seconds -------------------------
+		if(!(millis() % SENSOR_CHECK_TIME)) {
+
+			for(uint8_t i = 0; i < 5; i++) {
+				temp_sum += get_temp();
+			}
+
+			temp_avg = temp_sum / 5;
+
+
+			if(temp_avg < TEMP_CRITICAL_VAL) {
+
+				switch (swa_val) {
+
+					case 1:
+						if(temp_avg >= TEMP_LOW_VAL) {
+							pwm_heater(PWM_HEATER_PERCENT_OFF);
+							led_heater_off();
+						} else {
+							pwm_heater(PWM_HEATER_PERCENT_20);
+							led_heater_on();
+						}
+					break;
+						
+					case 2:
+						if(temp_avg >= TEMP_MID_VAL) {
+							pwm_heater(PWM_HEATER_PERCENT_OFF);
+							led_heater_off();
+						} else {
+							pwm_heater(PWM_HEATER_PERCENT_40);
+							led_heater_on();
+						}
+					break;
+						
+					case 3:
+						if(temp_avg >= TEMP_HIGH_VAL) {
+							pwm_heater(PWM_HEATER_PERCENT_OFF);
+							led_heater_off();
+						} else {
+							pwm_heater(PWM_HEATER_PERCENT_60);
+							led_heater_on();
+						}
+					break;
+						
+					case 4:
+						pwm_heater(PWM_HEATER_PERCENT_OFF);
+						led_heater_off();
+					break;
+						
+					default:
+						pwm_heater(PWM_HEATER_PERCENT_OFF);
+						led_heater_off();
+					break;
+				}
+			} else {
+				pwm_heater(PWM_HEATER_PERCENT_OFF);
+				led_heater_off();
+			}
+		}
 	}
+	return 0;
 }
 
