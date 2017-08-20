@@ -26,6 +26,17 @@
 #define		IO_PORTB_OUT	PORTB
 #define		IO_PORTB_DIR	DDRB
 
+#define		ANALOG_TMP_PIN	7
+
+void init_io() {
+	// Initialize IOs at PORT D
+	IO_PORTD_DIR |= (1 << PORTD3) | (1 << PORTD4);
+	IO_PORTD_DIR &= ~((1 << SW_A) | (1 << SW_B) | (1 << SW_C));
+
+	// Initialize IO at port B
+	IO_PORTB_DIR |= (1 << DDRB);
+}
+
 
 #define		PWM_PERCENT_33		84
 #define		PWM_PERCENT_66		166
@@ -53,8 +64,8 @@ void init_timerModule() {
 }
 void pwm_init() {			
 	
-	/********************************************
-	 *		For Heater Control at PD6
+	/*********************************************/
+	/*		For Heater Control at PD6			 */
 	/*********************************************/	
 	DDRD |= (1 << PORTD6);     // Set PD6 : Output
 	PORTD &= ~(1 << PORTD6);
@@ -67,8 +78,8 @@ void pwm_init() {
 	OCR0A = 0;           // Initial the Output Compare register A & B 
 	
 	
-	/********************************************
-	 *		For Fan control at PPB1
+	/*********************************************/
+	/*		For Fan control at PPB1				 */
 	/*********************************************/		
 	DDRB |= (1 << PORTB1);
 	PORTB &= ~(1 << PORTB1);
@@ -99,20 +110,95 @@ void pwm_fan(uint8_t p) {
 	return;	
 }
 
+void init_adc(void) {
+	
+	// 128 prescaller -> Fadc = 125KHz
+	ADCSRA |= (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
+	
+	// Channel 7, left justified result, vref = AVcc
+	ADMUX |= (1 << REFS0) | (1 << MUX2) | (1 << MUX1) | (1 << MUX0);	
+	return;
+}
+
+uint16_t get_temp() {
+	// Start conversion
+	ADCSRA |= (1 << ADSC);
+	
+	// Wait until the conversion completes 
+	while (ADCSRA & (1 << ADSC));
+	
+	return ADC;
+}
+
+uint8_t sw_a() {
+	if(IO_PORTD_IN & (1 << SW_A)) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+uint8_t get_sw_a() {
+	static uint8_t count_sw_a = 0;
+	
+	if(sw_a()) {		
+		_delay_ms(20);  // De-bounce Time
+		while(sw_a());
+		count_sw_a++;	// Increament the counter
+		
+		if(count_sw_a > 4)	count_sw_a = 1; // Initial Value is 1
+	}
+	
+	return count_sw_a;
+}
+
+
+uint8_t get_sw_b() {
+	if(IO_PORTD_IN & (1 << SW_B)) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+
+uint8_t get_sw_c() {
+	if(IO_PORTD_IN & (1 << SW_C)) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 int main(void) {    
 	pwm_init();
 	init_timerModule();
 	sei();
+	init_adc();
+
+	uint8_t test = 0;
+	uint8_t count_sw_b = 0;	
+	uint8_t count_sw_c = 0;
+
 	pwm_fan(84);
 	pwm_heater(84);
 	DDRC = 0xFF;
-    while (1) {
+	
+    while (1) {		
 		
-		if((millis() % 1000) == 0) {
-			PORTC ^= 0xAA;
-		}
-		
-		
-    }
+	test = get_sw_a();
+	
+	if(test == 1) {
+		PORTC = 0x01;
+	} else if(test == 2) {
+		PORTC = 0x02;
+	} else if(test == 3) {
+		PORTC = 0x03;
+	} else if(test == 4) {
+		PORTC = 0x04;
+	} else {
+		PORTC = 0x00;
+	}
+	}
 }
 
