@@ -45,12 +45,12 @@
 
 //#define		TIMER_VAL_HEATER			7200000UL	// 120 * 60 * 1000 (in Millisecond)
 //#define		TIMER_VAL_FAN				7200000UL	// 120 * 60 * 1000 (in Millisecond)
-#define		TIMER_VAL_LED				1800000UL	// 30 * 60 * 1000  (in Millisecond)
+//#define		TIMER_VAL_LED				1800000UL	// 30 * 60 * 1000  (in Millisecond)
 
 // Dummy 
 #define		TIMER_VAL_HEATER			10000UL	
 #define		TIMER_VAL_FAN				10000UL	
-
+#define		TIMER_VAL_LED				10000UL
 	
 static uint16_t PWM_FREQ = 490;
 static uint16_t TOP_VAL = 0;
@@ -174,7 +174,6 @@ uint8_t get_sw_a() {
 	
 	return count_sw_a;
 }
-
 
 uint8_t sw_b() {
 	if(IO_PORTD_IN & (1 << SW_B)) {
@@ -344,6 +343,7 @@ int main(void) {
 		if((millis() - time_val_heater_start) > TIMER_VAL_HEATER) {
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
+			count_sw_a = 0; swa_prev_val = 0;
 		}
 
 		// ------- End Heater Control -------------
@@ -388,6 +388,7 @@ int main(void) {
 
 		if((millis() - time_val_led_start) > TIMER_VAL_LED) {
 			led_sig_off();
+			count_sw_b = 0; swb_prev_val = 0;
 		}
 		// ------- End SIG LED control ---------------------------------
 
@@ -442,6 +443,7 @@ int main(void) {
 		if((millis() - time_val_fan_start) > TIMER_VAL_FAN) {
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
+			count_sw_c = 0; swc_prev_val = 0;
 		}
 	// ------- End fan control ---------------------------------
 	

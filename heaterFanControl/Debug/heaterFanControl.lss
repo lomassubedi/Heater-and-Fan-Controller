@@ -3,31 +3,31 @@ heaterFanControl.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .data         00000000  00800100  00800100  00000520  2**0
+  0 .data         00000000  00800100  00800100  00000532  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  1 .text         000004ac  00000000  00000000  00000074  2**1
+  1 .text         000004be  00000000  00000000  00000074  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .bss          00000007  00800100  00800100  00000520  2**0
+  2 .bss          00000007  00800100  00800100  00000532  2**0
                   ALLOC
-  3 .comment      00000030  00000000  00000000  00000520  2**0
+  3 .comment      00000030  00000000  00000000  00000532  2**0
                   CONTENTS, READONLY
-  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000550  2**2
+  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000564  2**2
                   CONTENTS, READONLY
-  5 .debug_aranges 000000c8  00000000  00000000  00000590  2**0
+  5 .debug_aranges 000000c8  00000000  00000000  000005a4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00000edb  00000000  00000000  00000658  2**0
+  6 .debug_info   00000edb  00000000  00000000  0000066c  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 000007c2  00000000  00000000  00001533  2**0
+  7 .debug_abbrev 000007c2  00000000  00000000  00001547  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00000856  00000000  00000000  00001cf5  2**0
+  8 .debug_line   00000868  00000000  00000000  00001d09  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  00000194  00000000  00000000  0000254c  2**2
+  9 .debug_frame  00000194  00000000  00000000  00002574  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    00000610  00000000  00000000  000026e0  2**0
+ 10 .debug_str    00000610  00000000  00000000  00002708  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    0000054b  00000000  00000000  00002cf0  2**0
+ 11 .debug_loc    0000052d  00000000  00000000  00002d18  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 000000d0  00000000  00000000  0000323b  2**0
+ 12 .debug_ranges 000000d0  00000000  00000000  00003245  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -82,7 +82,7 @@ Disassembly of section .text:
   80:	b2 07       	cpc	r27, r18
   82:	e1 f7       	brne	.-8      	; 0x7c <.do_clear_bss_loop>
   84:	0e 94 34 01 	call	0x268	; 0x268 <main>
-  88:	0c 94 54 02 	jmp	0x4a8	; 0x4a8 <_exit>
+  88:	0c 94 5d 02 	jmp	0x4ba	; 0x4ba <_exit>
 
 0000008c <__bad_interrupt>:
   8c:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -268,7 +268,6 @@ uint8_t get_sw_a() {
  1c0:	08 95       	ret
 
 000001c2 <sw_b>:
-
 
 uint8_t sw_b() {
 	if(IO_PORTD_IN & (1 << SW_B)) {
@@ -486,7 +485,7 @@ int main(void) {
 
 	uint8_t swc_val = 0;
 	uint8_t swc_prev_val = 0;
- 290:	00 e0       	ldi	r16, 0x00	; 0
+ 290:	10 e0       	ldi	r17, 0x00	; 0
 	
 	uint8_t swa_val = 0;
 	uint8_t swa_prev_val = 0;
@@ -516,7 +515,7 @@ void pwm_fan(uint8_t p) {
 		
 		swa_val = get_sw_a();
  29a:	0e 94 c1 00 	call	0x182	; 0x182 <get_sw_a>
- 29e:	18 2f       	mov	r17, r24
+ 29e:	08 2f       	mov	r16, r24
 
 		// ------- Heater Control -------------
 		if(swa_val != swa_prev_val) {
@@ -562,15 +561,15 @@ unsigned long millis(void) {
 			swa_prev_val = swa_val;
 
 			switch (swa_val) {
- 2ca:	12 30       	cpi	r17, 0x02	; 2
+ 2ca:	02 30       	cpi	r16, 0x02	; 2
  2cc:	81 f0       	breq	.+32     	; 0x2ee <main+0x86>
  2ce:	18 f4       	brcc	.+6      	; 0x2d6 <main+0x6e>
- 2d0:	11 30       	cpi	r17, 0x01	; 1
+ 2d0:	01 30       	cpi	r16, 0x01	; 1
  2d2:	31 f0       	breq	.+12     	; 0x2e0 <main+0x78>
  2d4:	26 c0       	rjmp	.+76     	; 0x322 <main+0xba>
- 2d6:	13 30       	cpi	r17, 0x03	; 3
+ 2d6:	03 30       	cpi	r16, 0x03	; 3
  2d8:	99 f0       	breq	.+38     	; 0x300 <main+0x98>
- 2da:	14 30       	cpi	r17, 0x04	; 4
+ 2da:	04 30       	cpi	r16, 0x04	; 4
  2dc:	d1 f0       	breq	.+52     	; 0x312 <main+0xaa>
  2de:	21 c0       	rjmp	.+66     	; 0x322 <main+0xba>
 	return;
@@ -594,7 +593,7 @@ void pwm_heater(uint8_t p) {
 			// Clear the tap history
 			count_sw_b = 0; swb_prev_val = 0;
 			count_sw_c = 0; swc_prev_val = 0;
- 2e8:	00 e0       	ldi	r16, 0x00	; 0
+ 2e8:	10 e0       	ldi	r17, 0x00	; 0
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
 			led_sig_off();
@@ -633,7 +632,7 @@ void pwm_heater(uint8_t p) {
 			// Clear the tap history
 			count_sw_b = 0; swb_prev_val = 0;
 			count_sw_c = 0; swc_prev_val = 0;
- 2fa:	00 e0       	ldi	r16, 0x00	; 0
+ 2fa:	10 e0       	ldi	r17, 0x00	; 0
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
 			led_sig_off();
@@ -672,7 +671,7 @@ void pwm_heater(uint8_t p) {
 			// Clear the tap history
 			count_sw_b = 0; swb_prev_val = 0;
 			count_sw_c = 0; swc_prev_val = 0;
- 30c:	00 e0       	ldi	r16, 0x00	; 0
+ 30c:	10 e0       	ldi	r17, 0x00	; 0
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
 			led_sig_off();
@@ -710,7 +709,7 @@ void pwm_heater(uint8_t p) {
 			// Clear the tap history
 			count_sw_b = 0; swb_prev_val = 0;
 			count_sw_c = 0; swc_prev_val = 0;
- 31c:	00 e0       	ldi	r16, 0x00	; 0
+ 31c:	10 e0       	ldi	r17, 0x00	; 0
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
 			led_sig_off();
@@ -747,7 +746,7 @@ void pwm_heater(uint8_t p) {
 			// Clear the tap history
 			count_sw_b = 0; swb_prev_val = 0;
 			count_sw_c = 0; swc_prev_val = 0;
- 32a:	00 e0       	ldi	r16, 0x00	; 0
+ 32a:	10 e0       	ldi	r17, 0x00	; 0
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
 			led_sig_off();
@@ -779,7 +778,7 @@ unsigned long millis(void) {
  348:	97 42       	sbci	r25, 0x27	; 39
  34a:	a1 05       	cpc	r26, r1
  34c:	b1 05       	cpc	r27, r1
- 34e:	18 f0       	brcs	.+6      	; 0x356 <main+0xee>
+ 34e:	30 f0       	brcs	.+12     	; 0x35c <main+0xf4>
 	return;
 }
 
@@ -794,478 +793,487 @@ void pwm_heater(uint8_t p) {
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
  352:	0e 94 2a 01 	call	0x254	; 0x254 <led_heater_off>
+			count_sw_a = 0; swa_prev_val = 0;
+ 356:	10 92 02 01 	sts	0x0102, r1	; 0x800102 <count_sw_a>
+ 35a:	00 e0       	ldi	r16, 0x00	; 0
 		// ------- End Heater Control -------------
 		
 
 
 		//----------- LED Control -----------------
 		swb_val = get_sw_b();
- 356:	0e 94 e5 00 	call	0x1ca	; 0x1ca <get_sw_b>
- 35a:	38 2e       	mov	r3, r24
+ 35c:	0e 94 e5 00 	call	0x1ca	; 0x1ca <get_sw_b>
+ 360:	38 2e       	mov	r3, r24
 
 		if(swb_val != swb_prev_val) {
- 35c:	28 16       	cp	r2, r24
- 35e:	49 f1       	breq	.+82     	; 0x3b2 <main+0x14a>
+ 362:	28 16       	cp	r2, r24
+ 364:	49 f1       	breq	.+82     	; 0x3b8 <main+0x150>
 	return;
 }
 
 void pwm_heater(uint8_t p) {
 	/*OCR0A = (uint8_t)((p / 100) * 255);*/
 	OCR0A = p;
- 360:	17 bc       	out	0x27, r1	; 39
+ 366:	17 bc       	out	0x27, r1	; 39
 
 		if(swb_val != swb_prev_val) {
 			
 			// --- Clear all other stuffs (heater/led)-----
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
- 362:	0e 94 2a 01 	call	0x254	; 0x254 <led_heater_off>
+ 368:	0e 94 2a 01 	call	0x254	; 0x254 <led_heater_off>
 }
 
 void pwm_fan(uint8_t p) {
 	/*OCR1A = (uint16_t)((p / 100) *  TOP_VAL);*/
 	/*OCR1A = TOP_VAL;*/
 	OCR1A = p;
- 366:	19 82       	std	Y+1, r1	; 0x01
- 368:	18 82       	st	Y, r1
+ 36c:	19 82       	std	Y+1, r1	; 0x01
+ 36e:	18 82       	st	Y, r1
 			// --- Clear all other stuffs (heater/led)-----
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
 			
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
- 36a:	0e 94 2e 01 	call	0x25c	; 0x25c <led_fan_off>
+ 370:	0e 94 2e 01 	call	0x25c	; 0x25c <led_fan_off>
 			
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
- 36e:	10 92 02 01 	sts	0x0102, r1	; 0x800102 <count_sw_a>
+ 374:	10 92 02 01 	sts	0x0102, r1	; 0x800102 <count_sw_a>
 			count_sw_c = 0; swc_prev_val = 0;
- 372:	10 92 00 01 	sts	0x0100, r1	; 0x800100 <_edata>
+ 378:	10 92 00 01 	sts	0x0100, r1	; 0x800100 <_edata>
 ISR(TIMER2_COMPA_vect) {
 	++milliseconds;
 }
 
 unsigned long millis(void) {
 	return milliseconds;
- 376:	40 90 03 01 	lds	r4, 0x0103	; 0x800103 <milliseconds>
- 37a:	50 90 04 01 	lds	r5, 0x0104	; 0x800104 <milliseconds+0x1>
- 37e:	60 90 05 01 	lds	r6, 0x0105	; 0x800105 <milliseconds+0x2>
- 382:	70 90 06 01 	lds	r7, 0x0106	; 0x800106 <milliseconds+0x3>
+ 37c:	40 90 03 01 	lds	r4, 0x0103	; 0x800103 <milliseconds>
+ 380:	50 90 04 01 	lds	r5, 0x0104	; 0x800104 <milliseconds+0x1>
+ 384:	60 90 05 01 	lds	r6, 0x0105	; 0x800105 <milliseconds+0x2>
+ 388:	70 90 06 01 	lds	r7, 0x0106	; 0x800106 <milliseconds+0x3>
 			
 			// ---- Proceed to fan work
 			time_val_led_start = millis();
 			swb_prev_val = swb_val;
 
 			switch (swb_val) {
- 386:	81 e0       	ldi	r24, 0x01	; 1
- 388:	38 16       	cp	r3, r24
- 38a:	21 f0       	breq	.+8      	; 0x394 <main+0x12c>
- 38c:	92 e0       	ldi	r25, 0x02	; 2
- 38e:	39 16       	cp	r3, r25
- 390:	31 f0       	breq	.+12     	; 0x39e <main+0x136>
- 392:	0a c0       	rjmp	.+20     	; 0x3a8 <main+0x140>
+ 38c:	81 e0       	ldi	r24, 0x01	; 1
+ 38e:	38 16       	cp	r3, r24
+ 390:	21 f0       	breq	.+8      	; 0x39a <main+0x132>
+ 392:	92 e0       	ldi	r25, 0x02	; 2
+ 394:	39 16       	cp	r3, r25
+ 396:	31 f0       	breq	.+12     	; 0x3a4 <main+0x13c>
+ 398:	0a c0       	rjmp	.+20     	; 0x3ae <main+0x146>
 				case 1:
 					led_sig_on();
- 394:	0e 94 30 01 	call	0x260	; 0x260 <led_sig_on>
+ 39a:	0e 94 30 01 	call	0x260	; 0x260 <led_sig_on>
 			led_fan_off();
 			
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
 			count_sw_c = 0; swc_prev_val = 0;
- 398:	21 2c       	mov	r2, r1
+ 39e:	21 2c       	mov	r2, r1
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
 			
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
- 39a:	10 e0       	ldi	r17, 0x00	; 0
+ 3a0:	00 e0       	ldi	r16, 0x00	; 0
 			swb_prev_val = swb_val;
 
 			switch (swb_val) {
 				case 1:
 					led_sig_on();
 				break;
- 39c:	0b c0       	rjmp	.+22     	; 0x3b4 <main+0x14c>
+ 3a2:	0b c0       	rjmp	.+22     	; 0x3ba <main+0x152>
 				
 				case 2:
 					led_sig_off();
- 39e:	0e 94 32 01 	call	0x264	; 0x264 <led_sig_off>
+ 3a4:	0e 94 32 01 	call	0x264	; 0x264 <led_sig_off>
 			led_fan_off();
 			
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
 			count_sw_c = 0; swc_prev_val = 0;
- 3a2:	21 2c       	mov	r2, r1
+ 3a8:	21 2c       	mov	r2, r1
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
 			
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
- 3a4:	10 e0       	ldi	r17, 0x00	; 0
+ 3aa:	00 e0       	ldi	r16, 0x00	; 0
 					led_sig_on();
 				break;
 				
 				case 2:
 					led_sig_off();
 				break;
- 3a6:	06 c0       	rjmp	.+12     	; 0x3b4 <main+0x14c>
+ 3ac:	06 c0       	rjmp	.+12     	; 0x3ba <main+0x152>
 				
 				default:
 					led_sig_off();
- 3a8:	0e 94 32 01 	call	0x264	; 0x264 <led_sig_off>
+ 3ae:	0e 94 32 01 	call	0x264	; 0x264 <led_sig_off>
 			led_fan_off();
 			
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
 			count_sw_c = 0; swc_prev_val = 0;
- 3ac:	21 2c       	mov	r2, r1
+ 3b2:	21 2c       	mov	r2, r1
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
 			
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
- 3ae:	10 e0       	ldi	r17, 0x00	; 0
+ 3b4:	00 e0       	ldi	r16, 0x00	; 0
 					led_sig_off();
 				break;
 				
 				default:
 					led_sig_off();
 				break;
- 3b0:	01 c0       	rjmp	.+2      	; 0x3b4 <main+0x14c>
- 3b2:	20 2e       	mov	r2, r16
+ 3b6:	01 c0       	rjmp	.+2      	; 0x3ba <main+0x152>
+ 3b8:	21 2e       	mov	r2, r17
 ISR(TIMER2_COMPA_vect) {
 	++milliseconds;
 }
 
 unsigned long millis(void) {
 	return milliseconds;
- 3b4:	80 91 03 01 	lds	r24, 0x0103	; 0x800103 <milliseconds>
- 3b8:	90 91 04 01 	lds	r25, 0x0104	; 0x800104 <milliseconds+0x1>
- 3bc:	a0 91 05 01 	lds	r26, 0x0105	; 0x800105 <milliseconds+0x2>
- 3c0:	b0 91 06 01 	lds	r27, 0x0106	; 0x800106 <milliseconds+0x3>
+ 3ba:	80 91 03 01 	lds	r24, 0x0103	; 0x800103 <milliseconds>
+ 3be:	90 91 04 01 	lds	r25, 0x0104	; 0x800104 <milliseconds+0x1>
+ 3c2:	a0 91 05 01 	lds	r26, 0x0105	; 0x800105 <milliseconds+0x2>
+ 3c6:	b0 91 06 01 	lds	r27, 0x0106	; 0x800106 <milliseconds+0x3>
 					led_sig_off();
 				break;
 			}
 		}
 
 		if((millis() - time_val_led_start) > TIMER_VAL_LED) {
- 3c4:	84 19       	sub	r24, r4
- 3c6:	95 09       	sbc	r25, r5
- 3c8:	a6 09       	sbc	r26, r6
- 3ca:	b7 09       	sbc	r27, r7
- 3cc:	81 34       	cpi	r24, 0x41	; 65
- 3ce:	97 47       	sbci	r25, 0x77	; 119
- 3d0:	ab 41       	sbci	r26, 0x1B	; 27
- 3d2:	b1 05       	cpc	r27, r1
- 3d4:	10 f0       	brcs	.+4      	; 0x3da <main+0x172>
+ 3ca:	84 19       	sub	r24, r4
+ 3cc:	95 09       	sbc	r25, r5
+ 3ce:	a6 09       	sbc	r26, r6
+ 3d0:	b7 09       	sbc	r27, r7
+ 3d2:	81 31       	cpi	r24, 0x11	; 17
+ 3d4:	97 42       	sbci	r25, 0x27	; 39
+ 3d6:	a1 05       	cpc	r26, r1
+ 3d8:	b1 05       	cpc	r27, r1
+ 3da:	28 f0       	brcs	.+10     	; 0x3e6 <main+0x17e>
 			led_sig_off();
- 3d6:	0e 94 32 01 	call	0x264	; 0x264 <led_sig_off>
+ 3dc:	0e 94 32 01 	call	0x264	; 0x264 <led_sig_off>
+			count_sw_b = 0; swb_prev_val = 0;
+ 3e0:	10 92 01 01 	sts	0x0101, r1	; 0x800101 <count_sw_b>
+ 3e4:	31 2c       	mov	r3, r1
 		}
 		// ------- End SIG LED control ---------------------------------
 
 
 		//----------- Fan Control -----------------
 		swc_val = get_sw_c();
- 3da:	0e 94 08 01 	call	0x210	; 0x210 <get_sw_c>
- 3de:	08 2f       	mov	r16, r24
+ 3e6:	0e 94 08 01 	call	0x210	; 0x210 <get_sw_c>
+ 3ea:	18 2f       	mov	r17, r24
 		if(swc_val != swc_prev_val) {
- 3e0:	28 16       	cp	r2, r24
- 3e2:	09 f4       	brne	.+2      	; 0x3e6 <main+0x17e>
- 3e4:	48 c0       	rjmp	.+144    	; 0x476 <__LOCK_REGION_LENGTH__+0x76>
+ 3ec:	28 16       	cp	r2, r24
+ 3ee:	09 f4       	brne	.+2      	; 0x3f2 <main+0x18a>
+ 3f0:	48 c0       	rjmp	.+144    	; 0x482 <__LOCK_REGION_LENGTH__+0x82>
 	return;
 }
 
 void pwm_heater(uint8_t p) {
 	/*OCR0A = (uint8_t)((p / 100) * 255);*/
 	OCR0A = p;
- 3e6:	17 bc       	out	0x27, r1	; 39
+ 3f2:	17 bc       	out	0x27, r1	; 39
 		swc_val = get_sw_c();
 		if(swc_val != swc_prev_val) {
 	
 			// --- Clear all other stuffs (heater/led)-----
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
- 3e8:	0e 94 2a 01 	call	0x254	; 0x254 <led_heater_off>
+ 3f4:	0e 94 2a 01 	call	0x254	; 0x254 <led_heater_off>
 			led_sig_off();
- 3ec:	0e 94 32 01 	call	0x264	; 0x264 <led_sig_off>
+ 3f8:	0e 94 32 01 	call	0x264	; 0x264 <led_sig_off>
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
- 3f0:	10 92 02 01 	sts	0x0102, r1	; 0x800102 <count_sw_a>
+ 3fc:	10 92 02 01 	sts	0x0102, r1	; 0x800102 <count_sw_a>
 			count_sw_b = 0; swb_prev_val = 0;
- 3f4:	10 92 01 01 	sts	0x0101, r1	; 0x800101 <count_sw_b>
+ 400:	10 92 01 01 	sts	0x0101, r1	; 0x800101 <count_sw_b>
 ISR(TIMER2_COMPA_vect) {
 	++milliseconds;
 }
 
 unsigned long millis(void) {
 	return milliseconds;
- 3f8:	80 90 03 01 	lds	r8, 0x0103	; 0x800103 <milliseconds>
- 3fc:	90 90 04 01 	lds	r9, 0x0104	; 0x800104 <milliseconds+0x1>
- 400:	a0 90 05 01 	lds	r10, 0x0105	; 0x800105 <milliseconds+0x2>
- 404:	b0 90 06 01 	lds	r11, 0x0106	; 0x800106 <milliseconds+0x3>
+ 404:	80 90 03 01 	lds	r8, 0x0103	; 0x800103 <milliseconds>
+ 408:	90 90 04 01 	lds	r9, 0x0104	; 0x800104 <milliseconds+0x1>
+ 40c:	a0 90 05 01 	lds	r10, 0x0105	; 0x800105 <milliseconds+0x2>
+ 410:	b0 90 06 01 	lds	r11, 0x0106	; 0x800106 <milliseconds+0x3>
 	
 			// ---- Proceed to fan work
 			time_val_fan_start = millis();
 			swc_prev_val = swc_val;
 
 			switch (swc_val) {
- 408:	02 30       	cpi	r16, 0x02	; 2
- 40a:	91 f0       	breq	.+36     	; 0x430 <__LOCK_REGION_LENGTH__+0x30>
- 40c:	18 f4       	brcc	.+6      	; 0x414 <__LOCK_REGION_LENGTH__+0x14>
- 40e:	01 30       	cpi	r16, 0x01	; 1
- 410:	31 f0       	breq	.+12     	; 0x41e <__LOCK_REGION_LENGTH__+0x1e>
- 412:	29 c0       	rjmp	.+82     	; 0x466 <__LOCK_REGION_LENGTH__+0x66>
- 414:	03 30       	cpi	r16, 0x03	; 3
- 416:	a9 f0       	breq	.+42     	; 0x442 <__LOCK_REGION_LENGTH__+0x42>
- 418:	04 30       	cpi	r16, 0x04	; 4
- 41a:	e1 f0       	breq	.+56     	; 0x454 <__LOCK_REGION_LENGTH__+0x54>
- 41c:	24 c0       	rjmp	.+72     	; 0x466 <__LOCK_REGION_LENGTH__+0x66>
+ 414:	12 30       	cpi	r17, 0x02	; 2
+ 416:	91 f0       	breq	.+36     	; 0x43c <__LOCK_REGION_LENGTH__+0x3c>
+ 418:	18 f4       	brcc	.+6      	; 0x420 <__LOCK_REGION_LENGTH__+0x20>
+ 41a:	11 30       	cpi	r17, 0x01	; 1
+ 41c:	31 f0       	breq	.+12     	; 0x42a <__LOCK_REGION_LENGTH__+0x2a>
+ 41e:	29 c0       	rjmp	.+82     	; 0x472 <__LOCK_REGION_LENGTH__+0x72>
+ 420:	13 30       	cpi	r17, 0x03	; 3
+ 422:	a9 f0       	breq	.+42     	; 0x44e <__LOCK_REGION_LENGTH__+0x4e>
+ 424:	14 30       	cpi	r17, 0x04	; 4
+ 426:	e1 f0       	breq	.+56     	; 0x460 <__LOCK_REGION_LENGTH__+0x60>
+ 428:	24 c0       	rjmp	.+72     	; 0x472 <__LOCK_REGION_LENGTH__+0x72>
 }
 
 void pwm_fan(uint8_t p) {
 	/*OCR1A = (uint16_t)((p / 100) *  TOP_VAL);*/
 	/*OCR1A = TOP_VAL;*/
 	OCR1A = p;
- 41e:	84 e5       	ldi	r24, 0x54	; 84
- 420:	90 e0       	ldi	r25, 0x00	; 0
- 422:	99 83       	std	Y+1, r25	; 0x01
- 424:	88 83       	st	Y, r24
+ 42a:	84 e5       	ldi	r24, 0x54	; 84
+ 42c:	90 e0       	ldi	r25, 0x00	; 0
+ 42e:	99 83       	std	Y+1, r25	; 0x01
+ 430:	88 83       	st	Y, r24
 			swc_prev_val = swc_val;
 
 			switch (swc_val) {
 				case 1:
 					pwm_fan(PWM_FAN_PERCENT_33);
 					led_fan_on();
- 426:	0e 94 2c 01 	call	0x258	; 0x258 <led_fan_on>
+ 432:	0e 94 2c 01 	call	0x258	; 0x258 <led_fan_on>
 			led_heater_off();
 			led_sig_off();
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
 			count_sw_b = 0; swb_prev_val = 0;
- 42a:	21 2c       	mov	r2, r1
+ 436:	21 2c       	mov	r2, r1
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
 			led_sig_off();
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
- 42c:	31 2c       	mov	r3, r1
+ 438:	31 2c       	mov	r3, r1
 
 			switch (swc_val) {
 				case 1:
 					pwm_fan(PWM_FAN_PERCENT_33);
 					led_fan_on();
 				break;
- 42e:	25 c0       	rjmp	.+74     	; 0x47a <__LOCK_REGION_LENGTH__+0x7a>
+ 43a:	25 c0       	rjmp	.+74     	; 0x486 <__LOCK_REGION_LENGTH__+0x86>
 }
 
 void pwm_fan(uint8_t p) {
 	/*OCR1A = (uint16_t)((p / 100) *  TOP_VAL);*/
 	/*OCR1A = TOP_VAL;*/
 	OCR1A = p;
- 430:	86 ea       	ldi	r24, 0xA6	; 166
- 432:	90 e0       	ldi	r25, 0x00	; 0
- 434:	99 83       	std	Y+1, r25	; 0x01
- 436:	88 83       	st	Y, r24
+ 43c:	86 ea       	ldi	r24, 0xA6	; 166
+ 43e:	90 e0       	ldi	r25, 0x00	; 0
+ 440:	99 83       	std	Y+1, r25	; 0x01
+ 442:	88 83       	st	Y, r24
 					led_fan_on();
 				break;
 		
 				case 2:
 					pwm_fan(PWM_FAN_PERCENT_66);
 					led_fan_on();
- 438:	0e 94 2c 01 	call	0x258	; 0x258 <led_fan_on>
+ 444:	0e 94 2c 01 	call	0x258	; 0x258 <led_fan_on>
 			led_heater_off();
 			led_sig_off();
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
 			count_sw_b = 0; swb_prev_val = 0;
- 43c:	21 2c       	mov	r2, r1
+ 448:	21 2c       	mov	r2, r1
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
 			led_sig_off();
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
- 43e:	31 2c       	mov	r3, r1
+ 44a:	31 2c       	mov	r3, r1
 				break;
 		
 				case 2:
 					pwm_fan(PWM_FAN_PERCENT_66);
 					led_fan_on();
 				break;
- 440:	1c c0       	rjmp	.+56     	; 0x47a <__LOCK_REGION_LENGTH__+0x7a>
+ 44c:	1c c0       	rjmp	.+56     	; 0x486 <__LOCK_REGION_LENGTH__+0x86>
 }
 
 void pwm_fan(uint8_t p) {
 	/*OCR1A = (uint16_t)((p / 100) *  TOP_VAL);*/
 	/*OCR1A = TOP_VAL;*/
 	OCR1A = p;
- 442:	8f ef       	ldi	r24, 0xFF	; 255
- 444:	90 e0       	ldi	r25, 0x00	; 0
- 446:	99 83       	std	Y+1, r25	; 0x01
- 448:	88 83       	st	Y, r24
+ 44e:	8f ef       	ldi	r24, 0xFF	; 255
+ 450:	90 e0       	ldi	r25, 0x00	; 0
+ 452:	99 83       	std	Y+1, r25	; 0x01
+ 454:	88 83       	st	Y, r24
 					led_fan_on();
 				break;
 		
 				case 3:
 					pwm_fan(PWM_FAN_PERCENT_100);
 					led_fan_on();
- 44a:	0e 94 2c 01 	call	0x258	; 0x258 <led_fan_on>
+ 456:	0e 94 2c 01 	call	0x258	; 0x258 <led_fan_on>
 			led_heater_off();
 			led_sig_off();
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
 			count_sw_b = 0; swb_prev_val = 0;
- 44e:	21 2c       	mov	r2, r1
+ 45a:	21 2c       	mov	r2, r1
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
 			led_sig_off();
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
- 450:	31 2c       	mov	r3, r1
+ 45c:	31 2c       	mov	r3, r1
 				break;
 		
 				case 3:
 					pwm_fan(PWM_FAN_PERCENT_100);
 					led_fan_on();
 				break;
- 452:	13 c0       	rjmp	.+38     	; 0x47a <__LOCK_REGION_LENGTH__+0x7a>
+ 45e:	13 c0       	rjmp	.+38     	; 0x486 <__LOCK_REGION_LENGTH__+0x86>
 }
 
 void pwm_fan(uint8_t p) {
 	/*OCR1A = (uint16_t)((p / 100) *  TOP_VAL);*/
 	/*OCR1A = TOP_VAL;*/
 	OCR1A = p;
- 454:	19 82       	std	Y+1, r1	; 0x01
- 456:	18 82       	st	Y, r1
+ 460:	19 82       	std	Y+1, r1	; 0x01
+ 462:	18 82       	st	Y, r1
 					led_fan_on();
 				break;
 		
 				case 4:
 					pwm_fan(PWM_FAN_PERCENT_OFF);
 					led_fan_off();
- 458:	0e 94 2e 01 	call	0x25c	; 0x25c <led_fan_off>
+ 464:	0e 94 2e 01 	call	0x25c	; 0x25c <led_fan_off>
 					PORTC = 0x04;
- 45c:	94 e0       	ldi	r25, 0x04	; 4
- 45e:	98 b9       	out	0x08, r25	; 8
+ 468:	94 e0       	ldi	r25, 0x04	; 4
+ 46a:	98 b9       	out	0x08, r25	; 8
 			led_heater_off();
 			led_sig_off();
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
 			count_sw_b = 0; swb_prev_val = 0;
- 460:	21 2c       	mov	r2, r1
+ 46c:	21 2c       	mov	r2, r1
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
 			led_sig_off();
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
- 462:	31 2c       	mov	r3, r1
+ 46e:	31 2c       	mov	r3, r1
 		
 				case 4:
 					pwm_fan(PWM_FAN_PERCENT_OFF);
 					led_fan_off();
 					PORTC = 0x04;
 				break;
- 464:	0a c0       	rjmp	.+20     	; 0x47a <__LOCK_REGION_LENGTH__+0x7a>
+ 470:	0a c0       	rjmp	.+20     	; 0x486 <__LOCK_REGION_LENGTH__+0x86>
 }
 
 void pwm_fan(uint8_t p) {
 	/*OCR1A = (uint16_t)((p / 100) *  TOP_VAL);*/
 	/*OCR1A = TOP_VAL;*/
 	OCR1A = p;
- 466:	19 82       	std	Y+1, r1	; 0x01
- 468:	18 82       	st	Y, r1
+ 472:	19 82       	std	Y+1, r1	; 0x01
+ 474:	18 82       	st	Y, r1
 					PORTC = 0x04;
 				break;
 		
 				default:
 					pwm_fan(PWM_FAN_PERCENT_OFF);
 					led_fan_off();
- 46a:	0e 94 2e 01 	call	0x25c	; 0x25c <led_fan_off>
+ 476:	0e 94 2e 01 	call	0x25c	; 0x25c <led_fan_off>
 					PORTC = 0x00;
- 46e:	18 b8       	out	0x08, r1	; 8
+ 47a:	18 b8       	out	0x08, r1	; 8
 			led_heater_off();
 			led_sig_off();
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
 			count_sw_b = 0; swb_prev_val = 0;
- 470:	21 2c       	mov	r2, r1
+ 47c:	21 2c       	mov	r2, r1
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
 			led_sig_off();
 
 			// Clear the tap history
 			count_sw_a = 0; swa_prev_val = 0;
- 472:	31 2c       	mov	r3, r1
+ 47e:	31 2c       	mov	r3, r1
 		
 				default:
 					pwm_fan(PWM_FAN_PERCENT_OFF);
 					led_fan_off();
 					PORTC = 0x00;
 				break;
- 474:	02 c0       	rjmp	.+4      	; 0x47a <__LOCK_REGION_LENGTH__+0x7a>
- 476:	23 2c       	mov	r2, r3
- 478:	31 2e       	mov	r3, r17
+ 480:	02 c0       	rjmp	.+4      	; 0x486 <__LOCK_REGION_LENGTH__+0x86>
+ 482:	23 2c       	mov	r2, r3
+ 484:	30 2e       	mov	r3, r16
 ISR(TIMER2_COMPA_vect) {
 	++milliseconds;
 }
 
 unsigned long millis(void) {
 	return milliseconds;
- 47a:	80 91 03 01 	lds	r24, 0x0103	; 0x800103 <milliseconds>
- 47e:	90 91 04 01 	lds	r25, 0x0104	; 0x800104 <milliseconds+0x1>
- 482:	a0 91 05 01 	lds	r26, 0x0105	; 0x800105 <milliseconds+0x2>
- 486:	b0 91 06 01 	lds	r27, 0x0106	; 0x800106 <milliseconds+0x3>
+ 486:	80 91 03 01 	lds	r24, 0x0103	; 0x800103 <milliseconds>
+ 48a:	90 91 04 01 	lds	r25, 0x0104	; 0x800104 <milliseconds+0x1>
+ 48e:	a0 91 05 01 	lds	r26, 0x0105	; 0x800105 <milliseconds+0x2>
+ 492:	b0 91 06 01 	lds	r27, 0x0106	; 0x800106 <milliseconds+0x3>
 					PORTC = 0x00;
 				break;
 			}
 		}
 
 		if((millis() - time_val_fan_start) > TIMER_VAL_FAN) {
- 48a:	88 19       	sub	r24, r8
- 48c:	99 09       	sbc	r25, r9
- 48e:	aa 09       	sbc	r26, r10
- 490:	bb 09       	sbc	r27, r11
- 492:	81 31       	cpi	r24, 0x11	; 17
- 494:	97 42       	sbci	r25, 0x27	; 39
- 496:	a1 05       	cpc	r26, r1
- 498:	b1 05       	cpc	r27, r1
- 49a:	08 f4       	brcc	.+2      	; 0x49e <__LOCK_REGION_LENGTH__+0x9e>
- 49c:	fe ce       	rjmp	.-516    	; 0x29a <main+0x32>
+ 496:	88 19       	sub	r24, r8
+ 498:	99 09       	sbc	r25, r9
+ 49a:	aa 09       	sbc	r26, r10
+ 49c:	bb 09       	sbc	r27, r11
+ 49e:	81 31       	cpi	r24, 0x11	; 17
+ 4a0:	97 42       	sbci	r25, 0x27	; 39
+ 4a2:	a1 05       	cpc	r26, r1
+ 4a4:	b1 05       	cpc	r27, r1
+ 4a6:	08 f4       	brcc	.+2      	; 0x4aa <__LOCK_REGION_LENGTH__+0xaa>
+ 4a8:	f8 ce       	rjmp	.-528    	; 0x29a <main+0x32>
 }
 
 void pwm_fan(uint8_t p) {
 	/*OCR1A = (uint16_t)((p / 100) *  TOP_VAL);*/
 	/*OCR1A = TOP_VAL;*/
 	OCR1A = p;
- 49e:	19 82       	std	Y+1, r1	; 0x01
- 4a0:	18 82       	st	Y, r1
+ 4aa:	19 82       	std	Y+1, r1	; 0x01
+ 4ac:	18 82       	st	Y, r1
 			}
 		}
 
 		if((millis() - time_val_fan_start) > TIMER_VAL_FAN) {
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
- 4a2:	0e 94 2e 01 	call	0x25c	; 0x25c <led_fan_off>
- 4a6:	f9 ce       	rjmp	.-526    	; 0x29a <main+0x32>
+ 4ae:	0e 94 2e 01 	call	0x25c	; 0x25c <led_fan_off>
+			count_sw_c = 0; swc_prev_val = 0;
+ 4b2:	10 92 00 01 	sts	0x0100, r1	; 0x800100 <_edata>
+ 4b6:	10 e0       	ldi	r17, 0x00	; 0
+ 4b8:	f0 ce       	rjmp	.-544    	; 0x29a <main+0x32>
 
-000004a8 <_exit>:
- 4a8:	f8 94       	cli
+000004ba <_exit>:
+ 4ba:	f8 94       	cli
 
-000004aa <__stop_program>:
- 4aa:	ff cf       	rjmp	.-2      	; 0x4aa <__stop_program>
+000004bc <__stop_program>:
+ 4bc:	ff cf       	rjmp	.-2      	; 0x4bc <__stop_program>
