@@ -149,6 +149,10 @@ uint16_t get_temp() {
 	return ADC;
 }
 
+volatile uint8_t count_sw_a = 0;
+volatile uint8_t count_sw_b = 0;
+volatile uint8_t count_sw_c = 0;
+
 uint8_t sw_a() {
 	if(IO_PORTD_IN & (1 << SW_A)) {
 		return 1;
@@ -158,7 +162,7 @@ uint8_t sw_a() {
 }
 
 uint8_t get_sw_a() {
-	static uint8_t count_sw_a = 0;
+	/*static uint8_t count_sw_a = 0;*/
 	
 	if(sw_a()) {		
 		_delay_ms(20);  // De-bounce Time
@@ -182,14 +186,14 @@ uint8_t sw_b() {
 
 uint8_t get_sw_b() {
 	
-	static uint8_t count_sw_b = 0;
+	/*static uint8_t count_sw_b = 0;*/
 	
 	if(sw_b()) {
 		_delay_ms(20);  // De-bounce Time
 		while(sw_b());
 		count_sw_b++;	// Increment the counter
 		
-		if(count_sw_b > 4)	count_sw_b = 1; // Initial Value is 1
+		if(count_sw_b > 2)	count_sw_b = 1; // Initial Value is 1
 	}
 	
 	return count_sw_b;
@@ -207,7 +211,7 @@ uint8_t sw_c() {
 
 uint8_t get_sw_c() {
 	
-	static uint8_t count_sw_c = 0;
+	/*static uint8_t count_sw_c = 0;*/
 	
 	if(sw_c()) {
 		_delay_ms(20);  // De-bounce Time
@@ -288,8 +292,6 @@ int main(void) {
     while (1) {		
 		
 		swa_val = get_sw_a();
-		swb_val = get_sw_b();
-		swc_val = get_sw_c();
 
 		// ------- Heater Control -------------
 		if(swa_val != swa_prev_val) {
@@ -297,8 +299,11 @@ int main(void) {
 			// --- Clear all other stuffs (fan/led)-----
 			pwm_fan(PWM_FAN_PERCENT_OFF);
 			led_fan_off();
-
 			led_sig_off();
+
+			// Clear the tap history
+			count_sw_b = 0; swb_prev_val = 0;
+			count_sw_c = 0; swc_prev_val = 0;
 			
 			// ---- Proceed to heater work
 			time_val_heater_start = millis(); 
@@ -306,32 +311,32 @@ int main(void) {
 
 			switch (swa_val) {
 				case 1:
-				pwm_heater(PWM_HEATER_PERCENT_20);
-				led_heater_on();
+					pwm_heater(PWM_HEATER_PERCENT_20);
+					led_heater_on();
 				break;
 				
 				case 2:
-				pwm_heater(PWM_HEATER_PERCENT_40);
-				led_heater_on();
-				PORTC = 0x02;
+					pwm_heater(PWM_HEATER_PERCENT_40);
+					led_heater_on();
+					PORTC = 0x02;
 				break;
 				
 				case 3:
-				pwm_heater(PWM_HEATER_PERCENT_60);
-				led_heater_on();
-				PORTC = 0x03;
+					pwm_heater(PWM_HEATER_PERCENT_60);
+					led_heater_on();
+					PORTC = 0x03;
 				break;
 				
 				case 4:
-				pwm_heater(PWM_HEATER_PERCENT_OFF);
-				led_heater_off();
-				PORTC = 0x04;
+					pwm_heater(PWM_HEATER_PERCENT_OFF);
+					led_heater_off();
+					PORTC = 0x04;
 				break;
 				
 				default:
-				pwm_heater(PWM_HEATER_PERCENT_OFF);
-				led_heater_off();
-				PORTC = 0x00;
+					pwm_heater(PWM_HEATER_PERCENT_OFF);
+					led_heater_off();
+					PORTC = 0x00;
 				break;
 			}
 		}
@@ -344,15 +349,61 @@ int main(void) {
 		// ------- End Heater Control -------------
 		
 
-		//----------- Fan Control -----------------
 
+		//----------- LED Control -----------------
+		swb_val = get_sw_b();
+
+		if(swb_val != swb_prev_val) {
+			
+			// --- Clear all other stuffs (heater/led)-----
+			pwm_heater(PWM_HEATER_PERCENT_OFF);
+			led_heater_off();
+			
+			pwm_fan(PWM_FAN_PERCENT_OFF);
+			led_fan_off();
+			
+
+			// Clear the tap history
+			count_sw_a = 0; swa_prev_val = 0;
+			count_sw_c = 0; swc_prev_val = 0;
+			
+			// ---- Proceed to fan work
+			time_val_led_start = millis();
+			swb_prev_val = swb_val;
+
+			switch (swb_val) {
+				case 1:
+					led_sig_on();
+				break;
+				
+				case 2:
+					led_sig_off();
+				break;
+				
+				default:
+					led_sig_off();
+				break;
+			}
+		}
+
+		if((millis() - time_val_led_start) > TIMER_VAL_LED) {
+			led_sig_off();
+		}
+		// ------- End SIG LED control ---------------------------------
+
+
+		//----------- Fan Control -----------------
+		swc_val = get_sw_c();
 		if(swc_val != swc_prev_val) {
 	
 			// --- Clear all other stuffs (heater/led)-----
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
-
 			led_sig_off();
+
+			// Clear the tap history
+			count_sw_a = 0; swa_prev_val = 0;
+			count_sw_b = 0; swb_prev_val = 0;
 	
 			// ---- Proceed to fan work
 			time_val_fan_start = millis();
@@ -360,30 +411,30 @@ int main(void) {
 
 			switch (swc_val) {
 				case 1:
-				pwm_fan(PWM_FAN_PERCENT_33);
-				led_fan_on();
+					pwm_fan(PWM_FAN_PERCENT_33);
+					led_fan_on();
 				break;
 		
 				case 2:
-				pwm_fan(PWM_FAN_PERCENT_66);
-				led_fan_on();
+					pwm_fan(PWM_FAN_PERCENT_66);
+					led_fan_on();
 				break;
 		
 				case 3:
-				pwm_fan(PWM_FAN_PERCENT_100);
-				led_fan_on();
+					pwm_fan(PWM_FAN_PERCENT_100);
+					led_fan_on();
 				break;
 		
 				case 4:
-				pwm_fan(PWM_FAN_PERCENT_OFF);
-				led_fan_off();
-				PORTC = 0x04;
+					pwm_fan(PWM_FAN_PERCENT_OFF);
+					led_fan_off();
+					PORTC = 0x04;
 				break;
 		
 				default:
-				pwm_fan(PWM_FAN_PERCENT_OFF);
-				led_fan_off();
-				PORTC = 0x00;
+					pwm_fan(PWM_FAN_PERCENT_OFF);
+					led_fan_off();
+					PORTC = 0x00;
 				break;
 			}
 		}
