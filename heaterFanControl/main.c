@@ -36,9 +36,9 @@
 #define		PWM_HEATER_PERCENT_66		166
 #define		PWM_HEATER_PERCENT_100		255
 
-#define		PWM_HEATER_PERCENT_20		51
-#define		PWM_HEATER_PERCENT_40		102
-#define		PWM_HEATER_PERCENT_60		153
+#define		PWM_HEATER_PERCENT_LOW		51
+#define		PWM_HEATER_PERCENT_MID		102
+#define		PWM_HEATER_PERCENT_HIGH		153
 
 #define		PWM_HEATER_PERCENT_OFF		0
 #define		PWM_FAN_PERCENT_OFF			0
@@ -66,9 +66,9 @@
 // Dummy Time value during test
 #if 1
 	#define		SENSOR_CHECK_TIME			5000UL
-	#define		TIMER_VAL_HEATER			40000UL
-	#define		TIMER_VAL_FAN				40000UL
-	#define		TIMER_VAL_LED				40000UL
+	#define		TIMER_VAL_HEATER			50000UL
+	#define		TIMER_VAL_FAN				30000UL
+	#define		TIMER_VAL_LED				30000UL
 #endif
 
 	
@@ -303,8 +303,6 @@ int main(void) {
 	
 	float temp_avg  = 0.0;
 	double temp_sum = 0.0;
-	
-	DDRC = 0xff;
 
     while (1) {		
 		
@@ -328,17 +326,17 @@ int main(void) {
 
 			switch (swa_val) {
 				case 1:
-					pwm_heater(PWM_HEATER_PERCENT_20);
+					pwm_heater(PWM_HEATER_PERCENT_LOW);
 					led_heater_on();
 				break;
 				
 				case 2:
-					pwm_heater(PWM_HEATER_PERCENT_40);
+					pwm_heater(PWM_HEATER_PERCENT_MID);
 					led_heater_on();
 				break;
 				
 				case 3:
-					pwm_heater(PWM_HEATER_PERCENT_60);
+					pwm_heater(PWM_HEATER_PERCENT_HIGH);
 					led_heater_on();
 				break;
 				
@@ -359,7 +357,6 @@ int main(void) {
 			led_heater_off();
 			count_sw_a = 0; swa_prev_val = 0;
 		}
-
 		// ------- End Heater Control -------------
 	
 
@@ -463,7 +460,6 @@ int main(void) {
 		// ---- Check sensor each 120 seconds -------------------------
 		if(flag_check_sensor) {
 			flag_check_sensor = 0;
-			PORTC ^= (1 << PORTC0);
 			
 			for(uint8_t i = 0; i < 5; i++) {
 				temp_sum += get_temp();
@@ -472,7 +468,6 @@ int main(void) {
 			temp_avg = temp_sum / 5;
 			
 			temp_sum = 0.0;
-
 
 			if(temp_avg < TEMP_CRITICAL_VAL) {
 
@@ -483,7 +478,7 @@ int main(void) {
 							pwm_heater(PWM_HEATER_PERCENT_OFF);
 							led_heater_off();
 						} else {
-							pwm_heater(PWM_HEATER_PERCENT_20);
+							pwm_heater(PWM_HEATER_PERCENT_LOW);
 							led_heater_on();
 						}
 					break;
@@ -493,7 +488,7 @@ int main(void) {
 							pwm_heater(PWM_HEATER_PERCENT_OFF);
 							led_heater_off();
 						} else {
-							pwm_heater(PWM_HEATER_PERCENT_40);
+							pwm_heater(PWM_HEATER_PERCENT_MID);
 							led_heater_on();
 						}
 					break;
@@ -503,7 +498,7 @@ int main(void) {
 							pwm_heater(PWM_HEATER_PERCENT_OFF);
 							led_heater_off();
 						} else {
-							pwm_heater(PWM_HEATER_PERCENT_60);
+							pwm_heater(PWM_HEATER_PERCENT_HIGH);
 							led_heater_on();
 						}
 					break;
