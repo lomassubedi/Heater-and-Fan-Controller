@@ -48,25 +48,29 @@
 #define		TEMP_HIGH_VAL				70.0F
 #define		TEMP_CRITICAL_VAL			80.0F
 
-/*#define		SENSOR_CHECK_TIME			120000UL			// 120 * 1000 (120 Seconds)*/
+#if 0
 
+	#define		SENSOR_CHECK_TIME			120000UL			// 120 * 1000 (120 Seconds)
 
-// 120 * 60 * 1000 (in Millisecond) -> 120 Minutes
-//#define		TIMER_VAL_HEATER			7200000UL	
+	// 120 * 60 * 1000 (in Millisecond) -> 120 Minutes
+	#define		TIMER_VAL_HEATER			7200000UL	
 
-// 120 * 60 * 1000 (in Millisecond) -> 120 Minutes
-//#define		TIMER_VAL_FAN				7200000UL	
+	// 120 * 60 * 1000 (in Millisecond) -> 120 Minutes
+	#define		TIMER_VAL_FAN				7200000UL	
 
-// 30 * 60 * 1000  (in Millisecond) -> 30 Minutes
-//#define		TIMER_VAL_LED				1800000UL	
+	// 30 * 60 * 1000  (in Millisecond) -> 30 Minutes
+	#define		TIMER_VAL_LED				1800000UL	
+#endif
 
 
 // Dummy Time value during test
-#define		SENSOR_CHECK_TIME			3000UL			
+#if 1
+	#define		SENSOR_CHECK_TIME			5000UL
+	#define		TIMER_VAL_HEATER			40000UL
+	#define		TIMER_VAL_FAN				40000UL
+	#define		TIMER_VAL_LED				40000UL
+#endif
 
-#define		TIMER_VAL_HEATER			20000UL	
-#define		TIMER_VAL_FAN				20000UL	
-#define		TIMER_VAL_LED				20000UL
 	
 static uint16_t PWM_FREQ = 490;
 static uint16_t TOP_VAL = 0;
@@ -75,10 +79,14 @@ volatile uint8_t count_sw_a = 0;
 volatile uint8_t count_sw_b = 0;
 volatile uint8_t count_sw_c = 0;
 
+volatile uint8_t flag_check_sensor = 0;
+
 volatile unsigned long milliseconds;
 
 ISR(TIMER2_COMPA_vect) {
 	++milliseconds;
+	if((milliseconds % SENSOR_CHECK_TIME) == 0)
+		flag_check_sensor = 1;
 }
 
 unsigned long millis(void) {
@@ -295,6 +303,8 @@ int main(void) {
 	
 	float temp_avg  = 0.0;
 	double temp_sum = 0.0;
+	
+	DDRC = 0xff;
 
     while (1) {		
 		
@@ -351,11 +361,11 @@ int main(void) {
 		}
 
 		// ------- End Heater Control -------------
-		
+	
 
 		//----------- LED Control -----------------
 		swb_val = get_sw_b();
-
+		
 		if(swb_val != swb_prev_val) {
 			
 			// --- Clear all other stuffs (heater/led)-----
@@ -448,16 +458,20 @@ int main(void) {
 		}
 		// ------- End fan control ---------------------------------
 	
-
+		
 		// --------------- Temperature sensing and Control ----------
 		// ---- Check sensor each 120 seconds -------------------------
-		if(!(millis() % SENSOR_CHECK_TIME)) {
-
+		if(flag_check_sensor) {
+			flag_check_sensor = 0;
+			PORTC ^= (1 << PORTC0);
+			
 			for(uint8_t i = 0; i < 5; i++) {
 				temp_sum += get_temp();
 			}
 
 			temp_avg = temp_sum / 5;
+			
+			temp_sum = 0.0;
 
 
 			if(temp_avg < TEMP_CRITICAL_VAL) {
@@ -508,7 +522,7 @@ int main(void) {
 				pwm_heater(PWM_HEATER_PERCENT_OFF);
 				led_heater_off();
 			}
-		}
+		} 
 	}
 	return 0;
 }
