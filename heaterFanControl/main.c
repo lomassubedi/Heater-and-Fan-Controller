@@ -6,14 +6,14 @@
  */ 
 
 #include <avr/io.h>
-#define F_CPU 16000000UL
+#define F_CPU 1000000UL		// Internal 1MHz Osc
 #include <util/delay.h>
 #include <avr/interrupt.h>
 
 
-#define		SW_A			PIND2
+#define		SW_C			PIND2
 #define		SW_B			PIND1
-#define		SW_C			PIND0
+#define		SW_A			PIND0
 
 #define		F_LED_CNTL		PORTD3
 #define		H_LED_CNTL		PORTD4
@@ -28,13 +28,9 @@
 
 #define		ANALOG_TMP_PIN	7
 
-#define		PWM_FAN_PERCENT_33			84
-#define		PWM_FAN_PERCENT_66			166
-#define		PWM_FAN_PERCENT_100			255
-
-#define		PWM_HEATER_PERCENT_33		84
-#define		PWM_HEATER_PERCENT_66		166
-#define		PWM_HEATER_PERCENT_100		255
+#define		PWM_FAN_PERCENT_LOW			7
+#define		PWM_FAN_PERCENT_MID			13
+#define		PWM_FAN_PERCENT_HIGH		20
 
 #define		PWM_HEATER_PERCENT_LOW		51
 #define		PWM_HEATER_PERCENT_MID		102
@@ -108,9 +104,9 @@ void pwm_init() {
 	DDRD |= (1 << PORTD6);     // Set PD6 : Output
 	PORTD &= ~(1 << PORTD6);
 	// Initial TIMER0 Phase Correct PWM  
-	// f_PWM = 16MHz / (64 * 510) = 490.196 Hz
+	// f_PWM = 1MHz / (256 * 510) = 7.65931 Hz
 	TCCR0A = 0b10000001; // Phase Correct PWM 8 Bit, Clear OCA0 on Compare Match, Set on TOP
-	TCCR0B = 0b00000011; // Used 64 Prescaler
+	TCCR0B = 0b00000100; // Used 256 Prescaler
 
 	TCNT0 = 0;           // Reset TCNT0
 	OCR0A = 0;           // Initial the Output Compare register A & B 
@@ -123,11 +119,11 @@ void pwm_init() {
 	PORTB &= ~(1 << PORTB1);
 	// Initial TIMER1 Phase and Frequency Correct PWM
 	// Set the Timer/Counter Control Register
-	// TOP = (16000000/(2 * 64 * 490)) = 255.10
+	// TOP = (1000000/(2 * 1 * 25000)) = 20
 	TCCR1A = 0b10000000; // Clear OC1A when up counting, Set when down counting
-	TCCR1B = 0b00010011; // Phase/Freq-correct PWM, top value = ICR1, Prescaler: 64
+	TCCR1B = 0b00010001; // Phase/Freq-correct PWM, top value = ICR1, Prescaler: 1
 	
-	TOP_VAL = (F_CPU / (128 * PWM_FREQ));
+	TOP_VAL = (F_CPU / (2 * PWM_FREQ));
 	
 	ICR1 = TOP_VAL;	
 	TCNT1 = 0;		
@@ -422,17 +418,17 @@ int main(void) {
 
 			switch (swc_val) {
 				case 1:
-					pwm_fan(PWM_FAN_PERCENT_33);
+					pwm_fan(PWM_FAN_PERCENT_LOW);
 					led_fan_on();
 				break;
 		
 				case 2:
-					pwm_fan(PWM_FAN_PERCENT_66);
+					pwm_fan(PWM_FAN_PERCENT_MID);
 					led_fan_on();
 				break;
 		
 				case 3:
-					pwm_fan(PWM_FAN_PERCENT_100);
+					pwm_fan(PWM_FAN_PERCENT_HIGH);
 					led_fan_on();
 				break;
 		
