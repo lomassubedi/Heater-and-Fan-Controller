@@ -28,13 +28,13 @@
 
 #define		ANALOG_TMP_PIN	7
 
-#define		PWM_FAN_PERCENT_LOW			7
-#define		PWM_FAN_PERCENT_MID			13
-#define		PWM_FAN_PERCENT_HIGH		20
+#define		PWM_FAN_PERCENT_LOW			7		// 33%
+#define		PWM_FAN_PERCENT_MID			13		// 66%
+#define		PWM_FAN_PERCENT_HIGH		20		// 100%
 
-#define		PWM_HEATER_PERCENT_LOW		51
-#define		PWM_HEATER_PERCENT_MID		102
-#define		PWM_HEATER_PERCENT_HIGH		153
+#define		PWM_HEATER_PERCENT_LOW		51		// 20%
+#define		PWM_HEATER_PERCENT_MID		102		// 40%
+#define		PWM_HEATER_PERCENT_HIGH		153		// 60%
 
 #define		PWM_HEATER_PERCENT_OFF		0
 #define		PWM_FAN_PERCENT_OFF			0
@@ -45,8 +45,8 @@
 #define		TEMP_CRITICAL_VAL			80.0F
 
 #if 0
-
-	#define		SENSOR_CHECK_TIME			120000UL			// 120 * 1000 (120 Seconds)
+	// 120 * 1000 (120 Seconds)
+	#define		SENSOR_CHECK_TIME			120000UL			
 
 	// 120 * 60 * 1000 (in Millisecond) -> 120 Minutes
 	#define		TIMER_VAL_HEATER			7200000UL	
@@ -134,10 +134,16 @@ void pwm_init() {
 void init_io() {
 	// Initialize IOs at PORT D
 	IO_PORTD_DIR |= (1 << PORTD3) | (1 << PORTD4);
+	
+	// Make Switch Pins Input
 	IO_PORTD_DIR &= ~((1 << SW_A) | (1 << SW_B) | (1 << SW_C));
+	
+	// Enable internal pull ups
+	IO_PORTD_OUT |= ((1 << SW_A) | (1 << SW_B) | (1 << SW_C));
 
 	// Initialize IO at port B
-	IO_PORTB_DIR |= (1 << DDRB);
+	IO_PORTB_DIR |= (1 << LED_SIG);
+	IO_PORTB_OUT &= ~(1 << LED_SIG);
 }
 
 void init_adc(void) {
@@ -361,7 +367,7 @@ int main(void) {
 		
 		if(swb_val != swb_prev_val) {
 			
-			// --- Clear all other stuffs (heater/led)-----
+			// --- Clear all other stuffs (heater/fan)-----
 			pwm_heater(PWM_HEATER_PERCENT_OFF);
 			led_heater_off();
 			
