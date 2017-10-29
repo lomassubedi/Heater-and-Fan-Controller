@@ -68,7 +68,7 @@
 #endif
 
 	
-static uint16_t PWM_FREQ = 490;
+static uint16_t PWM_FREQ = 25000;
 static uint16_t TOP_VAL = 0;
 
 volatile uint8_t count_sw_a = 0;

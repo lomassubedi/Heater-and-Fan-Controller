@@ -190,8 +190,8 @@ void pwm_fan(uint8_t p) {
  160:	80 93 80 00 	sts	0x0080, r24	; 0x800080 <__TEXT_REGION_LENGTH__+0x7e0080>
  164:	81 e1       	ldi	r24, 0x11	; 17
  166:	80 93 81 00 	sts	0x0081, r24	; 0x800081 <__TEXT_REGION_LENGTH__+0x7e0081>
- 16a:	8c ef       	ldi	r24, 0xFC	; 252
- 16c:	93 e0       	ldi	r25, 0x03	; 3
+ 16a:	84 e1       	ldi	r24, 0x14	; 20
+ 16c:	90 e0       	ldi	r25, 0x00	; 0
  16e:	90 93 87 00 	sts	0x0087, r25	; 0x800087 <__TEXT_REGION_LENGTH__+0x7e0087>
  172:	80 93 86 00 	sts	0x0086, r24	; 0x800086 <__TEXT_REGION_LENGTH__+0x7e0086>
  176:	10 92 85 00 	sts	0x0085, r1	; 0x800085 <__TEXT_REGION_LENGTH__+0x7e0085>
