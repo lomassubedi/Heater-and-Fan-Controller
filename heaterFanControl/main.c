@@ -44,6 +44,9 @@
 #define		TEMP_HIGH_VAL				70.0F
 #define		TEMP_CRITICAL_VAL			80.0F
 
+#define		HIGH						1
+#define		LOW							0
+
 #if 0
 	// 120 * 1000 (120 Seconds)
 	#define		SENSOR_CHECK_TIME			120000UL			
@@ -116,11 +119,11 @@ void pwm_init() {
 	/*		For Fan control at PPB1				 */
 	/*********************************************/		
 	DDRB |= (1 << PORTB1);
-	PORTB &= ~(1 << PORTB1);
+	PORTB |= (1 << PORTB1);
 	// Initial TIMER1 Phase and Frequency Correct PWM
 	// Set the Timer/Counter Control Register
 	// TOP = (1000000/(2 * 1 * 25000)) = 20
-	TCCR1A = 0b10000000; // Clear OC1A when up counting, Set when down counting
+	TCCR1A = 0b11110000; // Clear OC1A when up counting, Set when down counting
 	TCCR1B = 0b00010001; // Phase/Freq-correct PWM, top value = ICR1, Prescaler: 1
 	
 	TOP_VAL = (F_CPU / (2 * PWM_FREQ));
@@ -133,7 +136,8 @@ void pwm_init() {
 
 void init_io() {
 	// Initialize IOs at PORT D
-	IO_PORTD_DIR |= (1 << PORTD3) | (1 << PORTD4);
+	IO_PORTD_DIR |= (1 << F_LED_CNTL) | (1 << H_LED_CNTL);
+	IO_PORTD_OUT &= ~((1 << F_LED_CNTL) | (1 << H_LED_CNTL));
 	
 	// Make Switch Pins Input
 	IO_PORTD_DIR &= ~((1 << SW_A) | (1 << SW_B) | (1 << SW_C));
@@ -193,17 +197,22 @@ uint8_t sw_a() {
 }
 
 uint8_t get_sw_a() {
-	/*static uint8_t count_sw_a = 0;*/
-	
-	if(sw_a()) {		
+		static uint8_t switch_state = LOW;
+		static uint8_t switch_state_prev = LOW;
+		
+		switch_state = sw_a();
+		
 		_delay_ms(20);  // De-bounce Time
-		while(sw_a());
-		count_sw_a++;	// Increment the counter
+		
+		if(((switch_state == HIGH) && (switch_state_prev == LOW)) || ((switch_state == LOW) && (switch_state_prev == HIGH)))
+		{
+			switch_state_prev = switch_state;
+			count_sw_a++;	// Increment the counter
+		}
 		
 		if(count_sw_a > 4)	count_sw_a = 1; // Initial Value is 1
-	}
-	
-	return count_sw_a;
+		
+		return count_sw_a;
 }
 
 uint8_t sw_b() {
@@ -239,15 +248,20 @@ uint8_t sw_c() {
 
 uint8_t get_sw_c() {
 	
-	/*static uint8_t count_sw_c = 0;*/
+	static uint8_t switch_state = LOW;
+	static uint8_t switch_state_prev = LOW;
 	
-	if(sw_c()) {
-		_delay_ms(20);  // De-bounce Time
-		while(sw_c());
+	switch_state = sw_c();
+	
+	_delay_ms(20);  // De-bounce Time
+	
+	if(((switch_state == HIGH) && (switch_state_prev == LOW)) || ((switch_state == LOW) && (switch_state_prev == HIGH)))
+	{
+		switch_state_prev = switch_state;
 		count_sw_c++;	// Increment the counter
-		
-		if(count_sw_c > 4)	count_sw_c = 1; // Initial Value is 1
 	}
+	
+	if(count_sw_c > 4)	count_sw_c = 1; // Initial Value is 1
 	
 	return count_sw_c;
 }
@@ -284,11 +298,11 @@ void led_sig_off() {
 
 int main(void) {    
 	
-	pwm_init();
 	init_timerModule();
-	sei();
 	init_adc();
 	init_io();
+	pwm_init();
+	sei();
 	
 	uint8_t swa_val = 0;
 	uint8_t swa_prev_val = 0;
