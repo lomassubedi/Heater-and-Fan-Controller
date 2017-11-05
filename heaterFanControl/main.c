@@ -17,32 +17,42 @@
 
 #define		F_LED_CNTL		PORTD3
 #define		H_LED_CNTL		PORTD4
+#define		PWM_HT_OUT		PORTD6
 
 #define		IO_PORTD_OUT	PORTD
 #define		IO_PORTD_IN		PIND
 #define		IO_PORTD_DIR	DDRD
 
+#define		PWM_FAN_OUT		PORTB1
 #define		LED_SIG			PORTB2
 #define		IO_PORTB_OUT	PORTB
 #define		IO_PORTB_DIR	DDRB
 
 #define		ANALOG_TMP_PIN	7
 
-#define		PWM_FAN_PERCENT_LOW			7		// 33%
-#define		PWM_FAN_PERCENT_MID			13		// 66%
-#define		PWM_FAN_PERCENT_HIGH		20		// 100%
+// #define		PWM_FAN_PERCENT_LOW			7		// 33%
+// #define		PWM_FAN_PERCENT_MID			13		// 66%
+// #define		PWM_FAN_PERCENT_HIGH		20		// 100%
+// 
+// #define		PWM_HEATER_PERCENT_LOW		51		// 20%
+// #define		PWM_HEATER_PERCENT_MID		102		// 40%
+// #define		PWM_HEATER_PERCENT_HIGH		153		// 60%
 
-#define		PWM_HEATER_PERCENT_LOW		51		// 20%
-#define		PWM_HEATER_PERCENT_MID		102		// 40%
-#define		PWM_HEATER_PERCENT_HIGH		153		// 60%
+#define		PWM_FAN_PERCENT_LOW			33		// 33%
+#define		PWM_FAN_PERCENT_MID			66		// 66%
+#define		PWM_FAN_PERCENT_HIGH		100		// 100%
+
+#define		PWM_HEATER_PERCENT_LOW		20		// 20%
+#define		PWM_HEATER_PERCENT_MID		40		// 40%
+#define		PWM_HEATER_PERCENT_HIGH		60		// 60%
 
 #define		PWM_HEATER_PERCENT_OFF		0
 #define		PWM_FAN_PERCENT_OFF			0
 
-#define		TEMP_LOW_VAL				30.0F
-#define		TEMP_MID_VAL				50.0F
-#define		TEMP_HIGH_VAL				70.0F
-#define		TEMP_CRITICAL_VAL			80.0F
+#define		TEMP_LOW_VAL				30
+#define		TEMP_MID_VAL				50
+#define		TEMP_HIGH_VAL				70
+#define		TEMP_CRITICAL_VAL			80
 
 #define		HIGH						1
 #define		LOW							0
@@ -95,8 +105,8 @@ unsigned long millis(void) {
 void init_timerModule() {
 	TIMSK2 |= (1 << OCIE2A);					// Enable the compare match interrupt	
 	TCCR2A |= (1 << WGM21);						// CTC mode
-	TCCR2B |= (1 << CS22) | (1 << CS21);		// Clock/256
-	OCR2A = 0x3F;								// Load the offset
+	TCCR2B |= (1 << CS21);						// Clock/8
+	OCR2A = 0x7C;								// Load the offset
 	return;
 }
 void pwm_init() {			
@@ -104,8 +114,8 @@ void pwm_init() {
 	/*********************************************/
 	/*		For Heater Control at PD6			 */
 	/*********************************************/	
-	DDRD |= (1 << PORTD6);     // Set PD6 : Output
-	PORTD &= ~(1 << PORTD6);
+	IO_PORTD_DIR |= (1 << PWM_HT_OUT);     // Set PD6 : Output
+	IO_PORTD_OUT &= ~(1 << PWM_HT_OUT);
 	// Initial TIMER0 Phase Correct PWM  
 	// f_PWM = 1MHz / (256 * 510) = 7.65931 Hz
 	TCCR0A = 0b10000001; // Phase Correct PWM 8 Bit, Clear OCA0 on Compare Match, Set on TOP
@@ -118,12 +128,12 @@ void pwm_init() {
 	/*********************************************/
 	/*		For Fan control at PPB1				 */
 	/*********************************************/		
-	DDRB |= (1 << PORTB1);
-	PORTB |= (1 << PORTB1);
+	IO_PORTB_DIR |= (1 << PWM_FAN_OUT);
+	IO_PORTB_OUT |= (1 << PWM_FAN_OUT);
 	// Initial TIMER1 Phase and Frequency Correct PWM
 	// Set the Timer/Counter Control Register
 	// TOP = (1000000/(2 * 1 * 25000)) = 20
-	TCCR1A = 0b11110000; // Clear OC1A when up counting, Set when down counting
+	TCCR1A = 0b11000000; // Clear OC1A when up counting, Set when down counting
 	TCCR1B = 0b00010001; // Phase/Freq-correct PWM, top value = ICR1, Prescaler: 1
 	
 	TOP_VAL = (F_CPU / (2 * PWM_FREQ));
@@ -152,40 +162,59 @@ void init_io() {
 
 void init_adc(void) {
 	
+	// System Clock = 1MHz
 	// 128 prescaller -> Fadc = 125KHz
-	ADCSRA |= (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
+	ADCSRA |= (1 << ADPS1) | (1 << ADPS0);
+	
+	// Enable ADC
+	ADCSRA |= (1 << ADEN);
 	
 	// Channel 7, left justified result, Vref = AVcc
 	ADMUX |= (1 << REFS0) | (1 << MUX2) | (1 << MUX1) | (1 << MUX0);	
 	return;
 }
 
+uint16_t read_analog(void) {
+	
+	// Start Conversion
+	ADCSRA |= (1 << ADSC);
+	
+	// Keep pooling conversion complete flag
+	while(!(ADCSRA &(1 << ADIF)));
+	
+	// Reset conversion complete flag
+	ADCSRA |= (1 << ADIF);
+	
+	return ADC;
+}
+
 void pwm_heater(uint8_t p) {
-	/*OCR0A = (uint8_t)((p / 100) * 255);*/
-	OCR0A = p;
+	OCR0A = (uint8_t)(p * 0.01 * 255);
 	return;
 }
 
 void pwm_fan(uint8_t p) {
-	/*OCR1A = (uint16_t)((p / 100) *  TOP_VAL);*/
-	/*OCR1A = TOP_VAL;*/
-	OCR1A = p;
+	OCR1A = (uint8_t)(p  * 0.01 *  TOP_VAL);
 	return;
 }
 
-float get_temp() {
-	float temperature = 0.0;
-	// Start conversion
-	ADCSRA |= (1 << ADSC);
+uint8_t get_temp() {
 	
-	// Wait until the conversion completes 
-	while (ADCSRA & (1 << ADSC));
-
+	uint16_t analog_val = 0;
+	float temperature = 0.0;
+	float v_out = 0.0;
+	
+	analog_val = read_analog();
+	
+	// Get output voltage in mV
+	v_out = analog_val  * 4.8828125;
+	
 	// Temperature calculation goes follows
-	// 1 Degree Centigrade = 2.049 steps 
-	temperature = ADC / 2.049;
+	temperature = (v_out - 500.0);
+	
+	temperature = temperature / 10.0;
 
-	return temperature;
+	return (uint8_t)temperature;
 }
 
 uint8_t sw_a() {
@@ -197,22 +226,22 @@ uint8_t sw_a() {
 }
 
 uint8_t get_sw_a() {
-		static uint8_t switch_state = LOW;
-		static uint8_t switch_state_prev = LOW;
+	static uint8_t switch_state = LOW;
+	static uint8_t switch_state_prev = LOW;
 		
-		switch_state = sw_a();
+	switch_state = sw_a();
 		
-		_delay_ms(20);  // De-bounce Time
+	_delay_ms(20);  // De-bounce Time
 		
-		if(((switch_state == HIGH) && (switch_state_prev == LOW)) || ((switch_state == LOW) && (switch_state_prev == HIGH)))
-		{
-			switch_state_prev = switch_state;
-			count_sw_a++;	// Increment the counter
-		}
+	if(((switch_state == HIGH) && (switch_state_prev == LOW)) \
+		|| ((switch_state == LOW) && (switch_state_prev == HIGH))) {
+		switch_state_prev = switch_state;
+		count_sw_a++;	// Increment the counter
+	}
 		
-		if(count_sw_a > 4)	count_sw_a = 1; // Initial Value is 1
+	if(count_sw_a > 4)	count_sw_a = 1; // Initial Value is 1
 		
-		return count_sw_a;
+	return count_sw_a;
 }
 
 uint8_t sw_b() {
@@ -225,17 +254,22 @@ uint8_t sw_b() {
 
 uint8_t get_sw_b() {
 	
-	/*static uint8_t count_sw_b = 0;*/
+	static uint8_t switch_state = LOW;
+	static uint8_t switch_state_prev = LOW;
 	
-	if(sw_b()) {
-		_delay_ms(20);  // De-bounce Time
-		while(sw_b());
+	switch_state = sw_b();
+	
+	_delay_ms(20);  // De-bounce Time
+	
+	if(((switch_state == HIGH) && (switch_state_prev == LOW)) \
+		|| ((switch_state == LOW) && (switch_state_prev == HIGH))) {
+		switch_state_prev = switch_state;
 		count_sw_b++;	// Increment the counter
-		
-		if(count_sw_b > 2)	count_sw_b = 1; // Initial Value is 1
 	}
 	
-	return count_sw_b;
+	if(count_sw_b > 2)	count_sw_b = 1; // Initial Value is 1
+	
+	return count_sw_b;	
 }
 
 uint8_t sw_c() {
@@ -255,8 +289,8 @@ uint8_t get_sw_c() {
 	
 	_delay_ms(20);  // De-bounce Time
 	
-	if(((switch_state == HIGH) && (switch_state_prev == LOW)) || ((switch_state == LOW) && (switch_state_prev == HIGH)))
-	{
+	if(((switch_state == HIGH) && (switch_state_prev == LOW)) \
+		|| ((switch_state == LOW) && (switch_state_prev == HIGH))) {
 		switch_state_prev = switch_state;
 		count_sw_c++;	// Increment the counter
 	}
@@ -317,8 +351,8 @@ int main(void) {
 	unsigned long time_val_fan_start = 0;
 	unsigned long time_val_led_start = 0;
 	
-	float temp_avg  = 0.0;
-	double temp_sum = 0.0;
+	uint8_t temp_avg  = 0;
+	uint16_t temp_sum = 0;
 
     while (1) {		
 		
@@ -483,7 +517,7 @@ int main(void) {
 
 			temp_avg = temp_sum / 5;
 			
-			temp_sum = 0.0;
+			temp_sum = 0;
 
 			if(temp_avg < TEMP_CRITICAL_VAL) {
 
